@@ -142,7 +142,7 @@ const testCases = [
         },
     },
     {
-        name: 'java : print stdin',
+        name: 'java : hello world',
         reqObject: {
             language: 'java',
             script:
@@ -184,11 +184,11 @@ const testCases = [
         },
     },
     {
-        name: 'ruby : print hello world',
+        name: 'ruby : hello world',
         reqObject: {
             language: 'ruby',
             script:
-                'print "hello world"'
+                'print "hello world"',
         },
         expectedResponse: {
             val: 'hello world',
@@ -203,10 +203,120 @@ const testCases = [
             script:
                 'user_input = gets.chomp\n' +
                 'puts user_input',
-            stdin: '10\n'
+            stdin: '10\n',
         },
         expectedResponse: {
             val: '10\n',
+            status: 200,
+            error: 0,
+        },
+    },
+    // Added 3 languages testCases (GO, RUST, PHP)
+    {
+        name: 'go : hello world',
+        reqObject: {
+            language: 'go',
+            script:
+                'package main\n' +
+                'import "fmt"\n' +
+                'func main() {\n' +
+                '    fmt.Println("hello world")\n' +
+                '}',
+        },
+        expectedResponse: {
+            val: 'hello world\n',
+            status: 200,
+            error: 0,
+        },
+    },
+    {
+        name: 'go : print stdin',
+        reqObject: {
+            language: 'go',
+            script:
+                'package main\n' +
+                'import (\n' +
+                '    "bufio"\n' +
+                '    "fmt"\n' +
+                '    "os"\n' +
+                ')\n' +
+                'func main() {\n' +
+                '    scanner := bufio.NewScanner(os.Stdin)\n' +
+                '    for scanner.Scan() {\n' +
+                '        fmt.Println(scanner.Text())\n' +
+                '    }\n' +
+                '}',
+            stdin: '1 2 3\n',
+        },
+        expectedResponse: {
+            val: '1 2 3\n',
+            status: 200,
+            error: 0,
+        },
+    },
+    {
+        name: 'rust : hello world',
+        reqObject: {
+            language: 'rust',
+            script:
+                'fn main() {\n' +
+                '    println!("hello world");\n' +
+                '}',
+        },
+        expectedResponse: {
+            val: 'hello world\n',
+            status: 200,
+            error: 0,
+        },
+    },
+    {
+        name: 'rust : print stdin',
+        reqObject: {
+            language: 'rust',
+            script:
+                'use std::io::{self, BufRead};\n' +
+                'fn main() {\n' +
+                '    let stdin = io::stdin();\n' +
+                '    for line in stdin.lock().lines() {\n' +
+                '        println!("{}", line.unwrap());\n' +
+                '    }\n' +
+                '}',
+            stdin: '1 2 3\n',
+        },
+        expectedResponse: {
+            val: '1 2 3\n',
+            status: 200,
+            error: 0,
+        },
+    },
+    {
+        name: 'php : hello world',
+        reqObject: {
+            language: 'php',
+            script:
+                '<?php\n' +
+                'echo "hello world";\n' +
+                '?>',
+        },
+        expectedResponse: {
+            val: 'hello world',
+            status: 200,
+            error: 0,
+        },
+    },
+    {
+        name: 'php : print stdin',
+        reqObject: {
+            language: 'php',
+            script:
+                '<?php\n' +
+                '$input = file_get_contents("php://stdin");\n' +
+                'echo $input;\n' +
+                '?>',
+            stdin: '1 2 3\n',
+        },
+        expectedResponse: {
+            val: '1 2 3\n',
             status: 200,
             error: 0,
         },
@@ -294,6 +404,161 @@ const testCases = [
         },
         expectedResponse: {
             val: {},
+            status: 200,
+            error: 0,
+        },
+    },
+    // Edge Cases
+    {
+        name: 'cpp : empty input',
+        reqObject: {
+            language: 'cpp',
+            script: '',
+        },
+        expectedResponse: {
+            val: '',
+            status: 200,
+            error: 0,
+        },
+    },
+    {
+        name: 'python : empty input',
+        reqObject: {
+            language: 'python',
+            script: '',
+        },
+        expectedResponse: {
+            val: '',
+            status: 200,
+            error: 0,
+        },
+    },
+    // Syntax Errors
+    {
+        name: 'python : syntax error',
+        reqObject: {
+            language: 'python',
+            script: 'print("hello world"',
+        },
+        expectedResponse: {
+            val: 'SyntaxError: unexpected EOF while parsing\n',
+            status: 200,
+            error: 1,
+        },
+    },
+    {
+        name: 'go : syntax error',
+        reqObject: {
+            language: 'go',
+            script: 'package main\n func main() { fmt.Println("hello world" }',
+        },
+        expectedResponse: {
+            val: 'syntax error: unexpected }',
+            status: 200,
+            error: 1,
+        },
+    },
+    // Runtime Errors
+    {
+        name: 'python : runtime error',
+        reqObject: {
+            language: 'python',
+            script: 'print(1/0)',
+        },
+        expectedResponse: {
+            val: 'ZeroDivisionError: division by zero\n',
+            status: 200,
+            error: 1,
+        },
+    },
+    {
+        name: 'go : runtime error',
+        reqObject: {
+            language: 'go',
+            script:
+                'package main\n' +
+                'import "fmt"\n' +
+                'func main() {\n' +
+                '    var a []int\n' +
+                '    fmt.Println(a[1])\n' +
+                '}',
+        },
+        expectedResponse: {
+            val: 'runtime error: index out of range\n',
+            status: 200,
+            error: 1,
+        },
+    },
+    // Complex Data Structures
+    {
+        name: 'python : complex data structure',
+        reqObject: {
+            language: 'python',
+            script: 'print([i for i in range(5)])',
+        },
+        expectedResponse: {
+            val: '[0, 1, 2, 3, 4]\n',
+            status: 200,
+            error: 0,
+        },
+    },
+    {
+        name: 'rust : complex data structure',
+        reqObject: {
+            language: 'rust',
+            script:
+                'fn main() {\n' +
+                '    let arr = [1, 2, 3, 4, 5];\n' +
+                '    for i in arr.iter() {\n' +
+                '        println!("{}", i);\n' +
+                '    }\n' +
+                '}',
+        },
+        expectedResponse: {
+            val: '1\n2\n3\n4\n5\n',
+            status: 200,
+            error: 0,
+        },
+    },
+    // Concurrency
+    {
+        name: 'go : concurrency',
+        reqObject: {
+            language: 'go',
+            script:
+                'package main\n' +
+                'import (\n' +
+                '    "fmt"\n' +
+                '    "time"\n' +
+                ')\n' +
+                'func main() {\n' +
+                '    go func() {\n' +
+                '        fmt.Println("concurrent hello")\n' +
+                '    }()\n' +
+                '    time.Sleep(time.Second)\n' +
+                '}',
+        },
+        expectedResponse: {
+            val: 'concurrent hello\n',
+            status: 200,
+            error: 0,
+        },
+    },
+    {
+        name: 'rust : concurrency',
+        reqObject: {
+            language: 'rust',
+            script:
+                'use std::thread;\n' +
+                'fn main() {\n' +
+                '    let handle = thread::spawn(|| {\n' +
+                '        println!("hello from a thread!");\n' +
+                '    });\n' +
+                '    handle.join().unwrap();\n' +
+                '}',
+        },
+        expectedResponse: {
+            val: 'hello from a thread!\n',
             status: 200,
             error: 0,
         },
